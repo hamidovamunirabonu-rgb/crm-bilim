@@ -3,12 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BILIM CRM & TEST PRO</title>
+    <title>SIRIUS ULTIMATE | Pro ERP System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; border-radius: 24px; }
+        .sidebar { background: #0f172a; transition: 0.3s; }
+        .input-style { width: 100%; padding: 12px 16px; border-radius: 14px; border: 2px solid #f1f5f9; outline: none; transition: 0.2s; }
+        .input-style:focus { border-color: #3b82f6; background: white; }
+    </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-900">
+
+    <div id="auth-screen" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-md p-10 rounded-[2.5rem] shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-3xl mx-auto mb-4 shadow-xl shadow-blue-500/30">
+                    <i class="fas fa-fingerprint"></i>
+                </div>
+                <h2 class="text-3xl font-extrabold">Xush kelibsiz</h2>
+                <p class="text-slate-400 mt-2">Tizimga kirish uchun ma'lumotlarni kiriting</p>
+            </div>
+            <div class="space-y-4">
+                <input type="email" id="auth-email" placeholder="Email (admin@sirius.uz)" class="input-style">
+                <input type="password" id="auth-pass" placeholder="Parol" class="input-style">
+                <button onclick="handleAuth()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-blue-700 active:scale-95 transition">KIRISH</button>
+            </div>
+            <p class="text-center mt-6 text-xs text-slate-400">Xavfsizlik tizimi: Firebase Identity Platform</p>
+        </div>
+    </div>
+
+    <div id="main-app" class="hidden flex h-screen overflow-hidden">
+        <aside class="sidebar w-72 p-6 flex flex-col shrink-0">
+            <div class="flex items-center space-x-3 mb-10 px-2">
+                <i class="fas fa-rocket text-blue-500 text-2xl"></i>
+                <span class="text-white font-black text-xl tracking-tighter">SIRIUS PRO</span>
+            </div>
+            <nav class="flex-1 space-y-1">
+                <button onclick="nav('dash')" class="w-full flex items-center space-x-4 p-4 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                    <i class="fas fa-chart-pie"></i> <span class="font-bold text-sm">Dashboard</span>
+                </button>
+                <button onclick="nav('students')" class="w-full flex items-center space-x-4 p-4 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                    <i class="fas fa-user-graduate"></i> <span class="font-bold text-sm">O'quvchilar</span>
+                </button>
+                <button onclick="nav('journal')" class="w-full flex items-center space-x-4 p-4 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                    <i class="fas fa-book"></i> <span class="font-bold text-sm">Kundalik</span>
+                </button>
+            </nav>
+            <button onclick="logout()" class="mt-auto flex items-center space-x-3 p-4 text-red-400 font-bold text-sm hover:bg-red-500/10 rounded-2xl">
+                <i class="fas fa-power-off"></i> <span>Chiqish</span>
+            </button>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-8">
+            <header class="flex justify-between items-center mb-10">
+                <h2 id="page-title" class="text-3xl font-black text-slate-800">Boshqaruv Paneli</h2>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-sm font-black" id="user-display">Munirabonu K.</p>
+                        <p class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Administrator</p>
+                    </div>
+                </div>
+            </header>
+
+            <div id="sec-dash" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="glass-card p-8 text-blue-600"><p class="text-slate-400 text-xs font-bold uppercase">Aktiv O'quvchilar</p><h3 class="text-4xl font-black mt-2" id="stat-count">0</h3></div>
+                    <div class="glass-card p-8 text-green-600"><p class="text-slate-400 text-xs font-bold uppercase">Kutilayotgan tushum</p><h3 class="text-4xl font-black mt-2">18.5 mln</h3></div>
+                </div>
+                <div class="glass-card p-8"><canvas id="mainChart" height="100"></canvas></div>
+            </div>
+
+            <div id="sec-students" class="tab-content hidden">
+                <div class="flex justify-between mb-6">
+                    <h3 class="text-xl font-black">O'quvchilar ro'yxati</h3>
+                    <button onclick="toggleModal('stu-modal')" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg">+ Qo'shish</button>
+                </div>
+                <div class="glass-card overflow-hidden">
+                    <table class="w-full text-left"><thead class="bg-slate-50 border-b text-[10px] font-black uppercase text-slate-400"><th class="p-4">Ism Familiya</th><th class="p-4 text-center">Telegram ID</th><th class="p-4">Amal</th></thead><tbody id="stu-table"></tbody></table>
+                </div>
+            </div>
+
+            <div id="sec-journal" class="tab-content hidden">
+                <h3 class="text-xl font-black mb-6">Elektron Baholash</h3>
+                <div id="journal-list" class="grid gap-4"></div>
+            </div>
+        </main>
+    </div>
+
+    <div id="stu-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md p-8 rounded-[2rem]">
+            <h3 class="text-2xl font-black mb-6">Yangi o'quvchi</h3>
+            <div class="space-y-4">
+                <input id="new-name" placeholder="F.I.SH" class="input-style">
+                <input id="new-tg" placeholder="Telegram Chat ID (ixtiyoriy)" class="input-style">
+                <button onclick="addNewStudent()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg">BAZAGA QO'SHISH</button>
+                <button onclick="toggleModal('stu-modal')" class="w-full text-slate-400 font-bold">Yopish</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDocs, collection, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAk_5A1NI8rEI-RPEy5-SmVHQl_MgVthnY",
@@ -21,162 +123,74 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        // Global funksiyalar
-        window.handleLogin = async () => {
-            const user = document.getElementById('login-user').value;
-            const pass = document.getElementById('login-pass').value;
-
-            if(user === 'admin' && pass === 'admin77') {
-                showApp('admin');
-            } else {
-                // O'quvchilarni bazadan qidirish
-                const q = query(collection(db, "students"), where("login", "==", user), where("password", "==", pass));
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    const studentData = querySnapshot.docs[0].data();
-                    localStorage.setItem('currentUser', JSON.stringify(studentData));
-                    showApp('student');
-                } else {
-                    alert("Login yoki parol xato!");
-                }
-            }
+        // AUTH LOGIC
+        window.handleAuth = () => {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-pass').value;
+            signInWithEmailAndPassword(auth, email, pass)
+                .then(() => { document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); loadData(); })
+                .catch(err => alert("Xatolik: " + err.message));
         };
 
-        window.addStudent = async () => {
-            const name = document.getElementById('new-stu-name').value;
-            const login = document.getElementById('new-stu-login').value;
-            const pass = document.getElementById('new-stu-pass').value;
-            if(!name || !login) return;
+        window.logout = () => { signOut(auth).then(() => location.reload()); };
 
-            await addDoc(collection(db, "students"), { name, login, password: pass, role: 'student' });
-            alert("O'quvchi qo'shildi!");
-            location.reload();
+        onAuthStateChanged(auth, (user) => {
+            if (user) { document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); loadData(); }
+        });
+
+        // DATA LOGIC
+        window.addNewStudent = async () => {
+            const name = document.getElementById('new-name').value;
+            const tg = document.getElementById('new-tg').value;
+            await addDoc(collection(db, "students"), { name, tg, score: 0 });
+            toggleModal('stu-modal');
+            loadData();
         };
 
-        window.saveTest = async () => {
-            const test = {
-                question: document.getElementById('q-text').value,
-                options: [
-                    document.getElementById('q-a').value,
-                    document.getElementById('q-b').value,
-                    document.getElementById('q-c').value,
-                    document.getElementById('q-d').value
-                ],
-                correct: parseInt(document.getElementById('q-correct').value),
-                createdAt: new Date()
-            };
-            await addDoc(collection(db, "tests"), test);
-            alert("Test bazaga saqlandi!");
-        };
-
-        async function showApp(role) {
-            document.getElementById('auth-section').classList.add('hidden');
-            document.getElementById('app-section').classList.remove('hidden');
-            if(role === 'admin') {
-                document.getElementById('admin-ui').classList.remove('hidden');
-                loadResults();
-            } else {
-                document.getElementById('student-ui').classList.remove('hidden');
-                loadTests();
-            }
-        }
-
-        async function loadTests() {
-            const querySnapshot = await getDocs(collection(db, "tests"));
-            const testCont = document.getElementById('test-container');
-            let html = "";
-            querySnapshot.forEach((doc) => {
-                const t = doc.data();
-                html += `<div class="bg-white p-6 rounded-2xl shadow mb-4">
-                    <p class="font-bold text-lg">${t.question}</p>
-                    ${t.options.map((opt, i) => `
-                        <button onclick="checkAns('${doc.id}', ${i}, ${t.correct})" class="w-full text-left p-3 border rounded-xl mt-2 hover:bg-blue-50">${opt}</button>
-                    `).join('')}
-                </div>`;
+        window.loadData = async () => {
+            const snap = await getDocs(collection(db, "students"));
+            const table = document.getElementById('stu-table');
+            const journal = document.getElementById('journal-list');
+            let count = 0;
+            table.innerHTML = ""; journal.innerHTML = "";
+            
+            snap.forEach(docSnap => {
+                const s = docSnap.data(); count++;
+                table.innerHTML += `<tr class="border-b"><td class="p-4 font-bold">${s.name}</td><td class="p-4 text-center text-slate-400">${s.tg || 'Yo\'q'}</td><td class="p-4"><button onclick="delStu('${docSnap.id}')" class="text-red-400"><i class="fas fa-trash"></i></button></td></tr>`;
+                journal.innerHTML += `
+                    <div class="glass-card p-6 flex justify-between items-center">
+                        <span class="font-bold text-lg">${s.name}</span>
+                        <div class="flex items-center space-x-4">
+                            <input type="number" id="inp-${docSnap.id}" class="w-16 p-2 border rounded-xl text-center font-black" placeholder="0">
+                            <button onclick="sendNotification('${s.name}', '${s.tg}', '${docSnap.id}')" class="bg-green-500 text-white p-3 rounded-xl shadow-lg"><i class="fab fa-telegram-plane"></i></button>
+                        </div>
+                    </div>`;
             });
-            testCont.innerHTML = html || "Hozircha testlar yo'q.";
-        }
-
-        window.checkAns = async (id, choice, correct) => {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            const status = (choice === correct) ? "To'g'ri" : "Xato";
-            await addDoc(collection(db, "results"), {
-                studentName: user.name,
-                testId: id,
-                result: status,
-                date: new Date().toLocaleString()
-            });
-            alert("Javob saqlandi: " + status);
+            document.getElementById('stat-count').innerText = count;
         };
 
-        async function loadResults() {
-            const querySnapshot = await getDocs(collection(db, "results"));
-            const resList = document.getElementById('results-list');
-            resList.innerHTML = "";
-            querySnapshot.forEach((doc) => {
-                const r = doc.data();
-                resList.innerHTML += `<li class="p-2 border-b text-sm"><b>${r.studentName}</b>: ${r.result} (${r.date})</li>`;
-            });
-        }
+        window.sendNotification = async (name, chatId, docId) => {
+            const score = document.getElementById(`inp-${docId}`).value;
+            if(!chatId) return alert("Bu o'quvchining Telegram ID si kiritilmagan!");
+            
+            const botToken = "BOT_TOKENINGIZNI_SHU_YERGA_QOYING"; 
+            const text = `🎯 *SIRIUS ACADEMY*\n\nO'quvchi: *${name}*\nBaho: *${score}* ball\nHolat: ${score >= 60 ? '✅ Muvaffaqiyatli' : '⚠️ Ko\'proq o\'qish kerak'}`;
+            
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}&parse_mode=Markdown`);
+            alert("Telegram xabar yuborildi!");
+        };
     </script>
-</head>
-<body class="bg-slate-100 min-h-screen font-sans">
 
-    <div id="auth-section" class="flex items-center justify-center h-screen bg-gradient-to-tr from-blue-700 to-indigo-900">
-        <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md">
-            <h2 class="text-3xl font-black text-center text-blue-600 mb-8">BILIM SYSTEM</h2>
-            <input type="text" id="login-user" placeholder="Login" class="w-full p-4 border rounded-2xl mb-4 outline-none focus:ring-2 ring-blue-500">
-            <input type="password" id="login-pass" placeholder="Parol" class="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 ring-blue-500">
-            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition">Tizimga kirish</button>
-            <p class="text-center text-gray-400 mt-6 text-sm italic italic">Admin: admin / admin77</p>
-        </div>
-    </div>
-
-    <div id="app-section" class="hidden">
-        <nav class="bg-white border-b p-4 flex justify-between items-center px-8 shadow-sm">
-            <h1 class="text-xl font-black text-blue-600">BILIM CRM PRO</h1>
-            <button onclick="location.reload()" class="text-red-500 font-bold border border-red-200 px-4 py-1 rounded-lg">Chiqish</button>
-        </nav>
-
-        <div id="admin-ui" class="hidden container mx-auto p-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="bg-white p-6 rounded-3xl shadow-sm border">
-                    <h3 class="font-bold text-xl mb-6 text-gray-700">Yangi O'quvchi (Login-Parol bilan)</h3>
-                    <input id="new-stu-name" placeholder="F.I.SH" class="w-full p-3 border rounded-xl mb-3">
-                    <input id="new-stu-login" placeholder="Login yarating" class="w-full p-3 border rounded-xl mb-3">
-                    <input id="new-stu-pass" placeholder="Parol yarating" class="w-full p-3 border rounded-xl mb-6">
-                    <button onclick="addStudent()" class="w-full bg-green-500 text-white py-3 rounded-xl font-bold shadow-md hover:bg-green-600">O'quvchini Ro'yxatdan o'tkazish</button>
-                </div>
-
-                <div class="bg-white p-6 rounded-3xl shadow-sm border">
-                    <h3 class="font-bold text-xl mb-6 text-gray-700">4 Variantli Test Yaratish</h3>
-                    <textarea id="q-text" placeholder="Savol matni" class="w-full p-3 border rounded-xl mb-3"></textarea>
-                    <input id="q-a" placeholder="A varianti" class="w-full p-2 border rounded-lg mb-2">
-                    <input id="q-b" placeholder="B varianti" class="w-full p-2 border rounded-lg mb-2">
-                    <input id="q-c" placeholder="C varianti" class="w-full p-2 border rounded-lg mb-2">
-                    <input id="q-d" placeholder="D varianti" class="w-full p-2 border rounded-lg mb-2">
-                    <select id="q-correct" class="w-full p-3 border rounded-xl mb-4 bg-blue-50">
-                        <option value="0">To'g'ri javob: A</option>
-                        <option value="1">To'g'ri javob: B</option>
-                        <option value="2">To'g'ri javob: C</option>
-                        <option value="3">To'g'ri javob: D</option>
-                    </select>
-                    <button onclick="saveTest()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-md">Testni Bazaga Saqlash</button>
-                </div>
-
-                <div class="bg-white p-6 rounded-3xl shadow-sm border">
-                    <h3 class="font-bold text-xl mb-6 text-gray-700">O'quvchilar Natijalari</h3>
-                    <ul id="results-list" class="space-y-2"></ul>
-                </div>
-            </div>
-        </div>
-
-        <div id="student-ui" class="hidden container mx-auto p-8 max-w-2xl">
-            <h2 class="text-3xl font-black text-center mb-8 text-indigo-800">Sizning Testlaringiz</h2>
-            <div id="test-container"></div>
-        </div>
-    </div>
+    <script>
+        function nav(id) {
+            document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+            document.getElementById('sec-' + id).classList.remove('hidden');
+            const titles = {dash: 'Dashboard', students: 'O\'quvchilar', journal: 'Elektron Jurnal'};
+            document.getElementById('page-title').innerText = titles[id];
+        }
+        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+    </script>
 </body>
-                                                                                                  </html>
-                                                                                                  
+</html>
