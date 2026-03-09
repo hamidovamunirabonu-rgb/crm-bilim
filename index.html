@@ -3,135 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bilim CRM Pro</title>
+    <title>BILIM CRM & TEST PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body class="bg-gray-100 font-sans">
-    <div id="auth-screen" class="flex items-center justify-center h-screen bg-blue-600">
-        <div class="bg-white p-8 rounded-lg shadow-2xl w-80">
-            <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Bilim CRM</h2>
-            <input type="password" id="pass-input" placeholder="Parol" class="w-full p-2 border rounded mb-4 focus:outline-blue-500">
-            <button onclick="checkPass()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition">Kirish</button>
-        </div>
-    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDocs, collection, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    <div id="main-screen" class="hidden min-h-screen">
-        <nav class="bg-blue-700 text-white p-4 sticky top-0 z-50 shadow-md">
-            <div class="container mx-auto flex justify-between items-center">
-                <h1 class="text-xl font-bold italic"><i class="fas fa-university mr-2"></i>Bilim CRM</h1>
-                <div class="flex space-x-4 overflow-x-auto">
-                    <button onclick="showTab('students')" class="hover:underline px-2"><i class="fas fa-user-graduate"></i></button>
-                    <button onclick="showTab('teachers')" class="hover:underline px-2"><i class="fas fa-chalkboard-teacher"></i></button>
-                    <button onclick="showTab('sms')" class="hover:underline px-2"><i class="fas fa-sms"></i></button>
-                    <button onclick="showTab('stats')" class="hover:underline px-2"><i class="fas fa-chart-line"></i></button>
-                    <button onclick="showTab('tests')" class="hover:underline px-2"><i class="fas fa-file-alt"></i></button>
-                    <button onclick="location.reload()" class="bg-red-500 px-3 py-1 rounded-full text-xs">Chiqish</button>
-                </div>
-            </div>
-        </nav>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAk_5A1NI8rEI-RPEy5-SmVHQl_MgVthnY",
+            authDomain: "bilim-crm-90d31.firebaseapp.com",
+            projectId: "bilim-crm-90d31",
+            storageBucket: "bilim-crm-90d31.firebasestorage.app",
+            messagingSenderId: "916429053971",
+            appId: "1:916429053971:web:3ce6cab1bc431103739fe6"
+        };
 
-        <div class="p-4 container mx-auto">
-            <section id="students-tab" class="tab-content bg-white p-4 rounded shadow">
-                <h2 class="text-lg font-bold mb-4 border-b">Yangi O'quvchi Qo'shish</h2>
-                <div class="grid grid-cols-1 gap-2 mb-4">
-                    <input type="text" id="stu-name" placeholder="Ism Familiya" class="p-2 border rounded">
-                    <select id="stu-subject" class="p-2 border rounded">
-                        <option>Matematika</option>
-                        <option>Ingliz tili</option>
-                        <option>Ona tili</option>
-                    </select>
-                    <button onclick="addStudent()" class="bg-green-500 text-white p-2 rounded shadow-md"><i class="fas fa-plus"></i> Qo'shish</button>
-                </div>
-                <h3 class="font-bold mb-2">Ro'yxat</h3>
-                <div class="overflow-x-auto"><table class="w-full text-sm border text-left"><thead class="bg-gray-200"><tr><th class="p-2">ISM</th><th class="p-2">FAN</th><th class="p-2">AMAL</th></tr></thead><tbody id="student-list"></tbody></table></div>
-            </section>
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-            <section id="teachers-tab" class="tab-content hidden bg-white p-4 rounded shadow">
-                <h2 class="text-lg font-bold mb-4">O'qituvchilar</h2>
-                <input type="text" id="teacher-name" placeholder="O'qituvchi ismi" class="w-full p-2 border rounded mb-2">
-                <button onclick="addTeacher()" class="w-full bg-blue-500 text-white p-2 rounded mb-4">Qo'shish</button>
-                <ul id="teacher-list" class="divide-y border rounded"></ul>
-            </section>
+        // Global funksiyalar
+        window.handleLogin = async () => {
+            const user = document.getElementById('login-user').value;
+            const pass = document.getElementById('login-pass').value;
 
-            <section id="sms-tab" class="tab-content hidden bg-white p-4 rounded shadow">
-                <h2 class="text-lg font-bold mb-4"><i class="fas fa-paper-plane text-blue-500"></i> SMS Xabarnoma</h2>
-                <textarea id="sms-text" rows="4" class="w-full border p-2 rounded mb-2" placeholder="Xabarni yozing..."></textarea>
-                <button onclick="alert('SMS yuborish uchun API ulanishi kerak!')" class="w-full bg-orange-500 text-white p-3 rounded-lg font-bold">Barchaga SMS yuborish</button>
-                <p class="text-xs mt-2 text-gray-500 text-center">Eskiz.uz API orqali ishlaydi</p>
-            </section>
-
-            <section id="stats-tab" class="tab-content hidden bg-white p-4 rounded shadow text-center">
-                <h2 class="text-lg font-bold mb-4">Statistika</h2>
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="bg-blue-100 p-4 rounded"><p class="text-xs">O'quvchilar</p><b id="stat-count" class="text-xl">0</b></div>
-                    <div class="bg-green-100 p-4 rounded"><p class="text-xs">To'lovlar</p><b class="text-xl">8.5 mln</b></div>
-                </div>
-                <canvas id="myChart" width="200" height="200"></canvas>
-            </section>
-
-            <section id="tests-tab" class="tab-content hidden bg-white p-4 rounded shadow text-center">
-                <h2 class="text-lg font-bold mb-4">Test Natijalari</h2>
-                <p class="text-gray-500">Hozircha testlar mavjud emas.</p>
-                <button class="mt-4 bg-purple-500 text-white px-4 py-2 rounded">Yangi Test Yaratish</button>
-            </section>
-        </div>
-    </div>
-
-    <script>
-        function checkPass() {
-            if(document.getElementById('pass-input').value === '1234') {
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('main-screen').classList.remove('hidden');
-                updateStats();
-            } else { alert('Xato parol!'); }
-        }
-
-        function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(tabName + '-tab').classList.remove('hidden');
-            if(tabName === 'stats') initChart();
-        }
-
-        let students = JSON.parse(localStorage.getItem('stu_db')) || [];
-
-        function addStudent() {
-            let name = document.getElementById('stu-name').value;
-            let sub = document.getElementById('stu-subject').value;
-            if(!name) return;
-            students.push({name, sub});
-            localStorage.setItem('stu_db', JSON.stringify(students));
-            renderStudents();
-            document.getElementById('stu-name').value = '';
-        }
-
-        function renderStudents() {
-            let list = document.getElementById('student-list');
-            list.innerHTML = students.map((s, i) => `
-                <tr class="border-b">
-                    <td class="p-2">${s.name}</td>
-                    <td class="p-2">${s.sub}</td>
-                    <td class="p-2"><button onclick="delStu(${i})" class="text-red-500"><i class="fas fa-trash"></i></button></td>
-                </tr>
-            `).join('');
-            document.getElementById('stat-count').innerText = students.length;
-        }
-
-        function delStu(i) { students.splice(i, 1); localStorage.setItem('stu_db', JSON.stringify(students)); renderStudents(); }
-
-        function initChart() {
-            const ctx = document.getElementById('myChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['To\'lagan', 'Qarzdor'],
-                    datasets: [{ data: [70, 30], backgroundColor: ['#22c55e', '#ef4444'] }]
+            if(user === 'admin' && pass === 'admin77') {
+                showApp('admin');
+            } else {
+                // O'quvchilarni bazadan qidirish
+                const q = query(collection(db, "students"), where("login", "==", user), where("password", "==", pass));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const studentData = querySnapshot.docs[0].data();
+                    localStorage.setItem('currentUser', JSON.stringify(studentData));
+                    showApp('student');
+                } else {
+                    alert("Login yoki parol xato!");
                 }
+            }
+        };
+
+        window.addStudent = async () => {
+            const name = document.getElementById('new-stu-name').value;
+            const login = document.getElementById('new-stu-login').value;
+            const pass = document.getElementById('new-stu-pass').value;
+            if(!name || !login) return;
+
+            await addDoc(collection(db, "students"), { name, login, password: pass, role: 'student' });
+            alert("O'quvchi qo'shildi!");
+            location.reload();
+        };
+
+        window.saveTest = async () => {
+            const test = {
+                question: document.getElementById('q-text').value,
+                options: [
+                    document.getElementById('q-a').value,
+                    document.getElementById('q-b').value,
+                    document.getElementById('q-c').value,
+                    document.getElementById('q-d').value
+                ],
+                correct: parseInt(document.getElementById('q-correct').value),
+                createdAt: new Date()
+            };
+            await addDoc(collection(db, "tests"), test);
+            alert("Test bazaga saqlandi!");
+        };
+
+        async function showApp(role) {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('app-section').classList.remove('hidden');
+            if(role === 'admin') {
+                document.getElementById('admin-ui').classList.remove('hidden');
+                loadResults();
+            } else {
+                document.getElementById('student-ui').classList.remove('hidden');
+                loadTests();
+            }
+        }
+
+        async function loadTests() {
+            const querySnapshot = await getDocs(collection(db, "tests"));
+            const testCont = document.getElementById('test-container');
+            let html = "";
+            querySnapshot.forEach((doc) => {
+                const t = doc.data();
+                html += `<div class="bg-white p-6 rounded-2xl shadow mb-4">
+                    <p class="font-bold text-lg">${t.question}</p>
+                    ${t.options.map((opt, i) => `
+                        <button onclick="checkAns('${doc.id}', ${i}, ${t.correct})" class="w-full text-left p-3 border rounded-xl mt-2 hover:bg-blue-50">${opt}</button>
+                    `).join('')}
+                </div>`;
+            });
+            testCont.innerHTML = html || "Hozircha testlar yo'q.";
+        }
+
+        window.checkAns = async (id, choice, correct) => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const status = (choice === correct) ? "To'g'ri" : "Xato";
+            await addDoc(collection(db, "results"), {
+                studentName: user.name,
+                testId: id,
+                result: status,
+                date: new Date().toLocaleString()
+            });
+            alert("Javob saqlandi: " + status);
+        };
+
+        async function loadResults() {
+            const querySnapshot = await getDocs(collection(db, "results"));
+            const resList = document.getElementById('results-list');
+            resList.innerHTML = "";
+            querySnapshot.forEach((doc) => {
+                const r = doc.data();
+                resList.innerHTML += `<li class="p-2 border-b text-sm"><b>${r.studentName}</b>: ${r.result} (${r.date})</li>`;
             });
         }
-
-        renderStudents();
     </script>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans">
+
+    <div id="auth-section" class="flex items-center justify-center h-screen bg-gradient-to-tr from-blue-700 to-indigo-900">
+        <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md">
+            <h2 class="text-3xl font-black text-center text-blue-600 mb-8">BILIM SYSTEM</h2>
+            <input type="text" id="login-user" placeholder="Login" class="w-full p-4 border rounded-2xl mb-4 outline-none focus:ring-2 ring-blue-500">
+            <input type="password" id="login-pass" placeholder="Parol" class="w-full p-4 border rounded-2xl mb-6 outline-none focus:ring-2 ring-blue-500">
+            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition">Tizimga kirish</button>
+            <p class="text-center text-gray-400 mt-6 text-sm italic italic">Admin: admin / admin77</p>
+        </div>
+    </div>
+
+    <div id="app-section" class="hidden">
+        <nav class="bg-white border-b p-4 flex justify-between items-center px-8 shadow-sm">
+            <h1 class="text-xl font-black text-blue-600">BILIM CRM PRO</h1>
+            <button onclick="location.reload()" class="text-red-500 font-bold border border-red-200 px-4 py-1 rounded-lg">Chiqish</button>
+        </nav>
+
+        <div id="admin-ui" class="hidden container mx-auto p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border">
+                    <h3 class="font-bold text-xl mb-6 text-gray-700">Yangi O'quvchi (Login-Parol bilan)</h3>
+                    <input id="new-stu-name" placeholder="F.I.SH" class="w-full p-3 border rounded-xl mb-3">
+                    <input id="new-stu-login" placeholder="Login yarating" class="w-full p-3 border rounded-xl mb-3">
+                    <input id="new-stu-pass" placeholder="Parol yarating" class="w-full p-3 border rounded-xl mb-6">
+                    <button onclick="addStudent()" class="w-full bg-green-500 text-white py-3 rounded-xl font-bold shadow-md hover:bg-green-600">O'quvchini Ro'yxatdan o'tkazish</button>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border">
+                    <h3 class="font-bold text-xl mb-6 text-gray-700">4 Variantli Test Yaratish</h3>
+                    <textarea id="q-text" placeholder="Savol matni" class="w-full p-3 border rounded-xl mb-3"></textarea>
+                    <input id="q-a" placeholder="A varianti" class="w-full p-2 border rounded-lg mb-2">
+                    <input id="q-b" placeholder="B varianti" class="w-full p-2 border rounded-lg mb-2">
+                    <input id="q-c" placeholder="C varianti" class="w-full p-2 border rounded-lg mb-2">
+                    <input id="q-d" placeholder="D varianti" class="w-full p-2 border rounded-lg mb-2">
+                    <select id="q-correct" class="w-full p-3 border rounded-xl mb-4 bg-blue-50">
+                        <option value="0">To'g'ri javob: A</option>
+                        <option value="1">To'g'ri javob: B</option>
+                        <option value="2">To'g'ri javob: C</option>
+                        <option value="3">To'g'ri javob: D</option>
+                    </select>
+                    <button onclick="saveTest()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-md">Testni Bazaga Saqlash</button>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border">
+                    <h3 class="font-bold text-xl mb-6 text-gray-700">O'quvchilar Natijalari</h3>
+                    <ul id="results-list" class="space-y-2"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="student-ui" class="hidden container mx-auto p-8 max-w-2xl">
+            <h2 class="text-3xl font-black text-center mb-8 text-indigo-800">Sizning Testlaringiz</h2>
+            <div id="test-container"></div>
+        </div>
+    </div>
 </body>
-</html>
+                                                                                                  </html>
+                                                                                                  
